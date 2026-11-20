@@ -48,7 +48,8 @@ export const UserGroups = ({ user }: UserGroupsProps) => {
   const { enabled } = useHelp();
 
   const { hasAccess } = useAccess();
-  const isManager = hasAccess("manage-users");
+  const canManageMembership =
+    hasAccess("manage-users") || !!user.access?.manageGroupMembership;
 
   const alphabetize = (groupsList: GroupRepresentation[]) => {
     return sortBy(groupsList, (group) => group.path?.toUpperCase());
@@ -161,7 +162,7 @@ export const UserGroups = ({ user }: UserGroupsProps) => {
               title: t("joinGroupsFor", { username: user.username }),
               ok: "join",
             }}
-            canBrowse={isManager}
+            canBrowse={canManageMembership}
             onClose={() => setOpen(false)}
             onConfirm={async (groups = []) => {
               await addGroups(groups);

@@ -19,6 +19,8 @@ type CredentialRowProps = {
   credential: CredentialRepresentation;
   resetPassword: () => void;
   toggleDelete: () => void;
+  canResetPassword: boolean;
+  canManage: boolean;
   children: ReactNode;
 };
 
@@ -26,6 +28,8 @@ export const CredentialRow = ({
   credential,
   resetPassword,
   toggleDelete,
+  canResetPassword,
+  canManage,
   children,
 }: CredentialRowProps) => {
   const formatDate = useFormatDate();
@@ -77,7 +81,7 @@ export const CredentialRow = ({
           {t("showDataBtn")}
         </Button>
       </Td>
-      {credential.type === "password" ? (
+      {credential.type === "password" && canResetPassword ? (
         <Td isActionCell>
           <Button
             variant="secondary"
@@ -91,38 +95,40 @@ export const CredentialRow = ({
         <Td />
       )}
       <Td isActionCell>
-        <Dropdown
-          popperProps={{
-            position: "right",
-          }}
-          onOpenChange={toggleKebab}
-          toggle={(ref) => (
-            <MenuToggle
-              ref={ref}
-              isExpanded={kebabOpen}
-              onClick={toggleKebab}
-              variant="plain"
-              aria-label="Kebab toggle"
-            >
-              <EllipsisVIcon />
-            </MenuToggle>
-          )}
-          isOpen={kebabOpen}
-        >
-          <DropdownList>
-            <DropdownItem
-              key={credential.id}
-              data-testid="deleteDropdownItem"
-              component="button"
-              onClick={() => {
-                toggleDelete();
-                toggleKebab();
-              }}
-            >
-              {t("deleteBtn")}
-            </DropdownItem>
-          </DropdownList>
-        </Dropdown>
+        {canManage && (
+          <Dropdown
+            popperProps={{
+              position: "right",
+            }}
+            onOpenChange={toggleKebab}
+            toggle={(ref) => (
+              <MenuToggle
+                ref={ref}
+                isExpanded={kebabOpen}
+                onClick={toggleKebab}
+                variant="plain"
+                aria-label="Kebab toggle"
+              >
+                <EllipsisVIcon />
+              </MenuToggle>
+            )}
+            isOpen={kebabOpen}
+          >
+            <DropdownList>
+              <DropdownItem
+                key={credential.id}
+                data-testid="deleteDropdownItem"
+                component="button"
+                onClick={() => {
+                  toggleDelete();
+                  toggleKebab();
+                }}
+              >
+                {t("deleteBtn")}
+              </DropdownItem>
+            </DropdownList>
+          </Dropdown>
+        )}
       </Td>
     </>
   );

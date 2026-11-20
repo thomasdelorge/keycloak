@@ -415,9 +415,15 @@ export default function EditUser() {
                 title={<TabTitleText>{t("roleMapping")}</TabTitleText>}
                 {...roleMappingTab}
               >
-                <UserRoleMapping id={user.id!} name={user.username!} />
+                <UserRoleMapping
+                  id={user.id!}
+                  name={user.username!}
+                  canManage={
+                    hasAccess("manage-users") || !!user.access?.mapRoles
+                  }
+                />
               </Tab>
-              {hasAccess("query-groups") && (
+              {(hasAccess("query-groups") || user.access?.view) && (
                 <Tab
                   data-testid="user-groups-tab"
                   title={<TabTitleText>{t("groups")}</TabTitleText>}

@@ -20,6 +20,7 @@ type InlineLabelEditProps = {
   userId: string;
   credential: CredentialRepresentation;
   isEditable: boolean;
+  canEdit: boolean;
   toggle: () => void;
 };
 
@@ -27,6 +28,7 @@ export const InlineLabelEdit = ({
   userId,
   credential,
   isEditable,
+  canEdit,
   toggle,
 }: InlineLabelEditProps) => {
   const { adminClient } = useAdminClient();
@@ -91,14 +93,16 @@ export const InlineLabelEdit = ({
           ) : (
             <>
               {credential.userLabel}
-              <Button
-                aria-label={t("editUserLabel")}
-                variant="link"
-                className="kc-editUserLabel-btn"
-                onClick={toggle}
-                data-testid="editUserLabelBtn"
-                icon={<PencilAltIcon />}
-              />
+              {canEdit && (
+                <Button
+                  aria-label={t("editUserLabel")}
+                  variant="link"
+                  className="kc-editUserLabel-btn"
+                  onClick={toggle}
+                  data-testid="editUserLabelBtn"
+                  icon={<PencilAltIcon />}
+                />
+              )}
             </>
           )}
         </div>

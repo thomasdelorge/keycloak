@@ -84,7 +84,8 @@ export const UserForm = ({
   const formatDate = useFormatDate();
   const { addAlert, addError } = useAlerts();
   const { hasAccess } = useAccess();
-  const isManager = hasAccess("manage-users");
+  const canManageMembership =
+    hasAccess("manage-users") || !!user?.access?.manageGroupMembership;
   const canViewFederationLink = hasAccess("view-realm");
   const { whoAmI } = useWhoAmI();
 
@@ -201,7 +202,7 @@ export const UserForm = ({
                 title: "selectGroups",
                 ok: "join",
               }}
-              canBrowse={isManager}
+              canBrowse={canManageMembership}
               onConfirm={async (groups) => {
                 if (user?.id) {
                   await addGroups(groups || []);

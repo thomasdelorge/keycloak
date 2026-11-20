@@ -20,6 +20,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useAdminClient } from "../admin-client";
+import { useAccess } from "../context/access/Access";
 import { useConfirmDialog } from "../components/confirm-dialog/ConfirmDialog";
 import { KeycloakSpinner } from "@keycloak/keycloak-ui-shared";
 import { ListEmptyState } from "@keycloak/keycloak-ui-shared";
@@ -54,6 +55,8 @@ type UserCredentialsRowProps = {
   userId: string;
   toggleDelete: (credential: CredentialRepresentation) => void;
   resetPassword: () => void;
+  canResetPassword: boolean;
+  canManage: boolean;
   isUserLabelEdit?: UserLabelEdit;
   setIsUserLabelEdit: (isUserLabelEdit: UserLabelEdit) => void;
   refresh: () => void;
@@ -64,6 +67,8 @@ const UserCredentialsRow = ({
   userId,
   toggleDelete,
   resetPassword,
+  canResetPassword,
+  canManage,
   isUserLabelEdit,
   setIsUserLabelEdit,
   refresh,
@@ -73,10 +78,13 @@ const UserCredentialsRow = ({
     credential={credential}
     toggleDelete={() => toggleDelete(credential)}
     resetPassword={resetPassword}
+    canResetPassword={canResetPassword}
+    canManage={canManage}
   >
     <InlineLabelEdit
       credential={credential}
       userId={userId}
+      canEdit={canResetPassword}
       isEditable={
         (isUserLabelEdit?.status && isUserLabelEdit.rowKey === credential.id) ||
         false
@@ -98,6 +106,11 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
   const { adminClient } = useAdminClient();
 
   const { t } = useTranslation();
+  const { hasAccess } = useAccess();
+  const canResetPassword =
+    hasAccess("manage-users") || !!user.access?.resetPassword;
+  const canManageCredentials =
+    hasAccess("manage-users") || !!user.access?.manage;
   const { addAlert, addError } = useAlerts();
   const [key, setKey] = useState(0);
   const formatDate = useFormatDate();
@@ -398,7 +411,7 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
         />
       )}
       <DeleteConfirm />
-      {user.email && !emptyState && (
+      {canManageCredentials && user.email && !emptyState && (
         <Button
           className="kc-resetCredentialBtn-header"
           variant="primary"
@@ -410,9 +423,8 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
       )}
       {userCredentials.length !== 0 &&
         !userCredentials.find((credential) => credential.type === "password") &&
-        !credentialTypes.find(
-          (credential) => credential.type === "password",
-        ) && (
+        !credentialTypes.find((credential) => credential.type === "password") &&
+        canResetPassword && (
           <>
             <Button
               className="kc-setPasswordBtn-tbl"
@@ -458,7 +470,9 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
                 <Fragment key={groupedCredential.key}>
                   <Tr
                     id={groupedCredential.value.map(({ id }) => id).toString()}
-                    draggable={groupedUserCredentials.length > 1}
+                    draggable={
+                      canManageCredentials && groupedUserCredentials.length > 1
+                    }
                     onDrop={onDrop}
                     onDragEnd={onDragEnd}
                     onDragStart={onDragStart}
@@ -511,6 +525,8 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
                           userId={user.id!}
                           toggleDelete={onToggleDelete}
                           resetPassword={resetPassword}
+                          canResetPassword={canResetPassword}
+                          canManage={canManageCredentials}
                           isUserLabelEdit={isUserLabelEdit}
                           setIsUserLabelEdit={setIsUserLabelEdit}
                           refresh={refresh}
@@ -522,7 +538,7 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
                       <Tr
                         key={credential.id}
                         id={credential.id}
-                        draggable
+                        draggable={canManageCredentials}
                         onDrop={onDrop}
                         onDragEnd={onDragEnd}
                         onDragStart={onDragStart}
@@ -547,6 +563,8 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
                           userId={user.id!}
                           toggleDelete={onToggleDelete}
                           resetPassword={resetPassword}
+                          canResetPassword={canResetPassword}
+                          canManage={canManageCredentials}
                           isUserLabelEdit={isUserLabelEdit}
                           setIsUserLabelEdit={setIsUserLabelEdit}
                           refresh={refresh}
@@ -580,7 +598,7 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
                     <FederatedUserLink user={user} />
                   </Td>
                   <Td>{formatDate(new Date(credential.createdDate!))}</Td>
-                  {credential.type === "password" && (
+                  {credential.type === "password" && canResetPassword && (
                     <Td modifier="fitContent">
                       <Button variant="secondary" onClick={toggleModal}>
                         {t("setPassword")}
@@ -598,10 +616,10 @@ export const UserCredentials = ({ user, setUser }: UserCredentialsProps) => {
           hasIcon
           message={t("noCredentials")}
           instructions={t("noCredentialsText")}
-          primaryActionText={t("setPassword")}
-          onPrimaryAction={toggleModal}
+          primaryActionText={canResetPassword ? t("setPassword") : undefined}
+          onPrimaryAction={canResetPassword ? toggleModal : undefined}
           secondaryActions={
-            user.email
+            user.email && canManageCredentials
               ? [
                   {
                     text: t("credentialResetBtn"),
