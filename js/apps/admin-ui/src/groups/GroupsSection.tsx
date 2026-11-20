@@ -75,7 +75,10 @@ export default function GroupsSection({ orgId }: { orgId?: string } = {}) {
     hasAccess("manage-authorization", "manage-users", "manage-clients");
   const canManageGroup =
     hasAccess("manage-users") || currentGroup()?.access?.manage || false;
-  const canViewRoles = hasSomeAccess("view-users", "manage-users");
+  const canViewRoles =
+    hasSomeAccess("view-users", "manage-users") ||
+    !!currentGroup()?.access?.view ||
+    !!currentGroup()?.access?.manage;
   const canViewDetails =
     hasAccess("query-groups", "view-users") ||
     hasAccess("manage-users", "query-groups");

@@ -4,6 +4,7 @@ import {
   SubGroupQuery,
 } from "@keycloak/keycloak-admin-client/lib/resources/groups";
 import { SearchInput, ToolbarItem } from "@patternfly/react-core";
+import { IRowData } from "@patternfly/react-table";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -154,56 +155,54 @@ export const GroupTable = ({ refresh: viewRefresh }: GroupTableProps) => {
             />
           </>
         }
-        actions={
-          !isManager
-            ? []
-            : [
-                {
-                  title: t("edit"),
-                  onRowClick: async (group) => {
-                    setRename(group);
-                    return false;
+        actionResolver={(rowData: IRowData) => {
+          const group = rowData.data as GroupRepresentation;
+          if (!(hasAccess("manage-users") || group.access?.manage)) {
+            return [];
+          }
+
+          return [
+            {
+              title: t("edit"),
+              onClick: () => {
+                setRename(group);
+              },
+            },
+            {
+              title: t("moveTo"),
+              onClick: () => {
+                setMove(group);
+              },
+            },
+            {
+              title: t("createChildGroup"),
+              onClick: () => {
+                setSelectedRows([group]);
+                toggleCreateOpen();
+              },
+            },
+            ...(!id
+              ? [
+                  {
+                    title: t("duplicate"),
+                    onClick: () => {
+                      setDuplicateId(group.id);
+                    },
                   },
-                },
-                {
-                  title: t("moveTo"),
-                  onRowClick: async (group) => {
-                    setMove(group);
-                    return false;
-                  },
-                },
-                {
-                  title: t("createChildGroup"),
-                  onRowClick: async (group) => {
-                    setSelectedRows([group]);
-                    toggleCreateOpen();
-                    return false;
-                  },
-                },
-                ...(!id
-                  ? [
-                      {
-                        title: t("duplicate"),
-                        onRowClick: async (group: GroupRepresentation) => {
-                          setDuplicateId(group.id);
-                          return false;
-                        },
-                      },
-                    ]
-                  : []),
-                {
-                  isSeparator: true,
-                },
-                {
-                  title: t("delete"),
-                  onRowClick: async (group: GroupRepresentation) => {
-                    setSelectedRows([group]);
-                    toggleShowDelete();
-                    return true;
-                  },
-                },
-              ]
-        }
+                ]
+              : []),
+            {
+              isSeparator: true,
+            },
+            {
+              title: t("delete"),
+              onClick: () => {
+                setSelectedRows([group]);
+                toggleShowDelete();
+              },
+            },
+          ];
+        }}
         columns={[
           {
             name: "name",
@@ -227,8 +226,8 @@ export const GroupTable = ({ refresh: viewRefresh }: GroupTableProps) => {
             instructions={t(
               `noGroupsInThis${id ? "SubGroup" : groups.isOrgGroups() ? "Organization" : "Realm"}Instructions`,
             )}
-            primaryActionText={t("createGroup")}
-            onPrimaryAction={toggleCreateOpen}
+            primaryActionText={isManager ? t("createGroup") : undefined}
+            onPrimaryAction={isManager ? toggleCreateOpen : undefined}
           />
         }
       />
