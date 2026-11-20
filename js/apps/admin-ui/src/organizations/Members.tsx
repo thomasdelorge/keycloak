@@ -33,7 +33,7 @@ const UserDetailLink = (user: any) => {
   );
 };
 
-export const Members = () => {
+export const Members = ({ canManage }: { canManage: boolean }) => {
   const { t } = useTranslation();
   const { adminClient } = useAdminClient();
   const { id: orgId } = useParams<EditOrganizationParams>();
@@ -188,20 +188,24 @@ export const Members = () => {
                 aria-label={t("searchMembers")}
               />
             </ToolbarItem>
-            <ToolbarItem>
-              <Button variant="primary" onClick={toggleAddMembers}>
-                {t("addMember")}
-              </Button>
-            </ToolbarItem>
-            <ToolbarItem>
-              <Button
-                variant="plain"
-                isDisabled={selectedMembers.length === 0}
-                onClick={() => removeMember(selectedMembers)}
-              >
-                {t("removeMember")}
-              </Button>
-            </ToolbarItem>
+            {canManage && (
+              <ToolbarItem>
+                <Button variant="primary" onClick={toggleAddMembers}>
+                  {t("addMember")}
+                </Button>
+              </ToolbarItem>
+            )}
+            {canManage && (
+              <ToolbarItem>
+                <Button
+                  variant="plain"
+                  isDisabled={selectedMembers.length === 0}
+                  onClick={() => removeMember(selectedMembers)}
+                >
+                  {t("removeMember")}
+                </Button>
+              </ToolbarItem>
+            )}
             <ToolbarItem>
               <CheckboxFilterComponent
                 filterPlaceholderText={t("filterByMembershipType")}
@@ -217,12 +221,16 @@ export const Members = () => {
           </>
         }
         actions={[
-          {
-            title: t("remove"),
-            onRowClick: async (member) => {
-              await removeMember([member]);
-            },
-          },
+          ...(canManage
+            ? [
+                {
+                  title: t("remove"),
+                  onRowClick: async (member: UserRepresentation) => {
+                    await removeMember([member]);
+                  },
+                },
+              ]
+            : []),
           {
             title: t("showGroupMemberships"),
             onRowClick: (member) => {
@@ -256,6 +264,7 @@ export const Members = () => {
                 userId={member.id!}
                 name={member.username}
                 isManaged={member.membershipType === "MANAGED"}
+                isDisabled={!canManage}
               />
             ),
           },
@@ -264,12 +273,16 @@ export const Members = () => {
           <ListEmptyState
             message={t("emptyMembers")}
             instructions={t("emptyMembersInstructions")}
-            secondaryActions={[
-              {
-                text: t("addRealmUser"),
-                onClick: toggleAddMembers,
-              },
-            ]}
+            secondaryActions={
+              canManage
+                ? [
+                    {
+                      text: t("addRealmUser"),
+                      onClick: toggleAddMembers,
+                    },
+                  ]
+                : undefined
+            }
           />
         }
         isSearching={

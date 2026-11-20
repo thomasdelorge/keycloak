@@ -10,6 +10,7 @@ type MembershipTypeToggleProps = {
   /** Labels the switch, the member or the organization depending on the table. */
   name?: string;
   isManaged: boolean;
+  isDisabled?: boolean;
 };
 
 export const MembershipTypeToggle = ({
@@ -17,6 +18,7 @@ export const MembershipTypeToggle = ({
   userId,
   name,
   isManaged,
+  isDisabled = false,
 }: MembershipTypeToggleProps) => {
   const { t } = useTranslation();
   const { adminClient } = useAdminClient();
@@ -50,6 +52,7 @@ export const MembershipTypeToggle = ({
       labelOff={t("UNMANAGED")}
       aria-label={name ?? t("membershipType")}
       isChecked={checked}
+      isDisabled={isDisabled}
       onChange={(_event, value) => update(value)}
     />
   );

@@ -41,6 +41,7 @@ import {
 import { useAccess } from "../context/access/Access";
 import { AdminEvents } from "../events/AdminEvents";
 import { useState } from "react";
+import OrganizationRepresentation from "@keycloak/keycloak-admin-client/lib/defs/organizationRepresentation";
 
 export default function DetailOrganization() {
   const { adminClient } = useAdminClient();
@@ -51,6 +52,8 @@ export default function DetailOrganization() {
   const { t } = useTranslation();
 
   const form = useForm<OrganizationFormType>();
+  const [organization, setOrganization] =
+    useState<OrganizationRepresentation>();
 
   const save = async (org: OrganizationFormType) => {
     try {
@@ -72,6 +75,7 @@ export default function DetailOrganization() {
       if (!org) {
         throw new Error(t("notFound"));
       }
+      setOrganization(org);
       form.reset({
         ...org,
         domains: undefined,
@@ -100,12 +104,17 @@ export default function DetailOrganization() {
   const eventsTab = useTab("events");
 
   const { hasAccess } = useAccess();
+  const canManage =
+    hasAccess("manage-organizations") || !!organization?.access?.manage;
   const [activeEventsTab, setActiveEventsTab] = useState("adminEvents");
 
   return (
     <PageSection variant="light" className="pf-v5-u-p-0">
       <FormProvider {...form}>
-        <DetailOrganizationHeader save={() => save(form.getValues())} />
+        <DetailOrganizationHeader
+          save={() => save(form.getValues())}
+          canManage={canManage}
+        />
         <RoutableTabs
           data-testid="organization-tabs"
           aria-label={t("organization")}
@@ -120,7 +129,8 @@ export default function DetailOrganization() {
           >
             <PageSection>
               <FormAccess
-                role="anyone"
+                role="manage-organizations"
+                fineGrainedAccess={canManage}
                 onSubmit={form.handleSubmit(save)}
                 isHorizontal
               >
@@ -149,7 +159,7 @@ export default function DetailOrganization() {
             title={<TabTitleText>{t("domains")}</TabTitleText>}
             {...domainsTab}
           >
-            <DomainsTab />
+            <DomainsTab canManage={canManage} />
           </Tab>
           <Tab
             id="attributes"
@@ -161,6 +171,7 @@ export default function DetailOrganization() {
               <AttributesForm
                 form={form}
                 save={save}
+                fineGrainedAccess={canManage}
                 reset={() =>
                   form.reset({
                     ...form.getValues(),
@@ -176,7 +187,7 @@ export default function DetailOrganization() {
             title={<TabTitleText>{t("members")}</TabTitleText>}
             {...membersTab}
           >
-            <MembersSection />
+            <MembersSection canManage={canManage} />
           </Tab>
           <Tab
             id="groups"
@@ -192,7 +203,7 @@ export default function DetailOrganization() {
             title={<TabTitleText>{t("identityProviders")}</TabTitleText>}
             {...identityProvidersTab}
           >
-            <IdentityProviders />
+            <IdentityProviders canManage={canManage} />
           </Tab>
           {realmRepresentation.adminEventsEnabled &&
             hasAccess("view-events") && (

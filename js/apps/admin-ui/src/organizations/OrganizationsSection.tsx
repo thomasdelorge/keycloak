@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAdminClient } from "../admin-client";
 import { useConfirmDialog } from "../components/confirm-dialog/ConfirmDialog";
 import { ViewHeader } from "../components/view-header/ViewHeader";
+import { useAccess } from "../context/access/Access";
 import { useRealm } from "../context/realm-context/RealmContext";
 import { toEditOrganization } from "../organizations/routes/EditOrganization";
 import { toAddOrganization } from "./routes/AddOrganization";
@@ -23,6 +24,8 @@ import { toAddOrganization } from "./routes/AddOrganization";
 export default function OrganizationSection() {
   const { adminClient } = useAdminClient();
   const { realm } = useRealm();
+  const { hasAccess } = useAccess();
+  const canManageOrganizations = hasAccess("manage-organizations");
   const { t } = useTranslation();
   const { addAlert, addError } = useAlerts();
   const navigate = useNavigate();
@@ -96,6 +99,7 @@ export default function OrganizationSection() {
             setSelectedOrg(org);
             toggleDeleteDialog();
           }}
+          canDelete={(org) => canManageOrganizations || !!org.access?.manage}
         >
           <ListEmptyState
             message={t("emptyOrganizations")}

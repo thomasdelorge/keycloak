@@ -165,16 +165,22 @@ public class OrganizationsResource {
 
         if (StringUtil.isNotBlank(identityProviderAlias)) {
             return provider.getByIdentityProvider(resolveIdentityProvider(identityProviderAlias, searchQuery), search, exact, first, max)
-                    .map(model -> ModelToRepresentation.toRepresentation(model, briefRepresentation));
+                    .map(model -> toRepresentation(model, briefRepresentation));
         }
 
         // check if are searching orgs by attribute.
         if (StringUtil.isNotBlank(searchQuery)) {
             Map<String, String> attributes = SearchQueryUtils.getFields(searchQuery);
-            return provider.getAllStream(attributes, first, max).map(model -> ModelToRepresentation.toRepresentation(model, briefRepresentation));
+            return provider.getAllStream(attributes, first, max).map(model -> toRepresentation(model, briefRepresentation));
         } else {
-            return provider.getAllStream(search, exact, first, max).map(model -> ModelToRepresentation.toRepresentation(model, briefRepresentation));
+            return provider.getAllStream(search, exact, first, max).map(model -> toRepresentation(model, briefRepresentation));
         }
+    }
+
+    private OrganizationRepresentation toRepresentation(OrganizationModel model, boolean briefRepresentation) {
+        OrganizationRepresentation rep = ModelToRepresentation.toRepresentation(model, briefRepresentation);
+        rep.setAccess(auth.orgs().getAccess(model));
+        return rep;
     }
 
     private IdentityProviderModel resolveIdentityProvider(String alias, String searchQuery) {

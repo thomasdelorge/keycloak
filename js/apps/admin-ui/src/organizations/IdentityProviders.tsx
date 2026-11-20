@@ -43,7 +43,7 @@ const OrgLinkProperty = ({
   return t(link.membershipType || "UNMANAGED");
 };
 
-export const IdentityProviders = () => {
+export const IdentityProviders = ({ canManage }: { canManage: boolean }) => {
   const { adminClient } = useAdminClient();
   const { t } = useTranslation();
   const { id: orgId } = useParams<EditOrganizationParams>();
@@ -119,48 +119,57 @@ export const IdentityProviders = () => {
           ariaLabelKey="identityProviders"
           searchPlaceholderKey="searchProvider"
           toolbarItem={
-            <ToolbarItem>
-              <Button
-                onClick={() => {
-                  setSelectedRow(undefined);
-                  toggleOpen();
-                }}
-              >
-                {t("linkIdentityProvider")}
-              </Button>
-            </ToolbarItem>
-          }
-          actions={[
-            {
-              title: t("edit"),
-              onRowClick: (row) => {
-                setSelectedRow(row);
-                toggleOpen();
-              },
-            },
-            {
-              title: t("unLinkIdentityProvider"),
-              onRowClick: (row) => {
-                setSelectedRow(row);
-                toggleUnlinkDialog();
-              },
-            },
-          ]}
-          columns={[
-            {
-              name: "alias",
-              cellRenderer: (row) => (
+            canManage ? (
+              <ToolbarItem>
                 <Button
-                  variant="link"
-                  isInline
                   onClick={() => {
-                    setSelectedRow(row);
+                    setSelectedRow(undefined);
                     toggleOpen();
                   }}
                 >
-                  {row.alias}
+                  {t("linkIdentityProvider")}
                 </Button>
-              ),
+              </ToolbarItem>
+            ) : undefined
+          }
+          actions={
+            canManage
+              ? [
+                  {
+                    title: t("edit"),
+                    onRowClick: (row) => {
+                      setSelectedRow(row);
+                      toggleOpen();
+                    },
+                  },
+                  {
+                    title: t("unLinkIdentityProvider"),
+                    onRowClick: (row) => {
+                      setSelectedRow(row);
+                      toggleUnlinkDialog();
+                    },
+                  },
+                ]
+              : []
+          }
+          columns={[
+            {
+              name: "alias",
+              cellRenderer: (row) =>
+                canManage ? (
+                  <Button
+                    variant="link"
+                    isInline
+                    onClick={() => {
+                      setSelectedRow(row);
+                      toggleOpen();
+                    }}
+                  >
+                    {row.alias}
+                  </Button>
+                ) : (
+                  row.alias
+                ),
             },
             {
               name: "providerId",

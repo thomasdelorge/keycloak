@@ -108,7 +108,7 @@ const SelectClientModal = ({ onSelect, onClose }: SelectClientModalProps) => {
   );
 };
 
-export const Invitations = () => {
+export const Invitations = ({ canManage }: { canManage: boolean }) => {
   const { t } = useTranslation();
   const { adminClient } = useAdminClient();
   const { id: orgId } = useParams<EditOrganizationParams>();
@@ -306,53 +306,57 @@ export const Invitations = () => {
                 aria-label={t("searchInvitations")}
               />
             </ToolbarItem>
-            <ToolbarItem>
-              <Dropdown
-                onOpenChange={setIsInviteMenuOpen}
-                toggle={(ref) => (
-                  <MenuToggle
-                    ref={ref}
-                    id="invite-member-toggle"
-                    variant="primary"
-                    onClick={() => setIsInviteMenuOpen(!isInviteMenuOpen)}
-                    isExpanded={isInviteMenuOpen}
-                  >
-                    {t("inviteMember")}
-                  </MenuToggle>
-                )}
-                isOpen={isInviteMenuOpen}
-              >
-                <DropdownList>
-                  <DropdownItem
-                    key="invite-new-user"
-                    onClick={() => {
-                      setIsInviteMenuOpen(false);
-                      toggleInviteMembers();
-                    }}
-                  >
-                    {t("inviteNewUser")}
-                  </DropdownItem>
-                  <DropdownItem
-                    key="invite-realm-user"
-                    onClick={() => {
-                      setIsInviteMenuOpen(false);
-                      toggleSelectClient();
-                    }}
-                  >
-                    {t("inviteRealmUser")}
-                  </DropdownItem>
-                </DropdownList>
-              </Dropdown>
-            </ToolbarItem>
-            <ToolbarItem>
-              <Button
-                variant="plain"
-                isDisabled={selectedInvitations.length === 0}
-                onClick={toggleDeleteDialog}
-              >
-                {t("deleteInvitations")}
-              </Button>
-            </ToolbarItem>
+            {canManage && (
+              <ToolbarItem>
+                <Dropdown
+                  onOpenChange={setIsInviteMenuOpen}
+                  toggle={(ref) => (
+                    <MenuToggle
+                      ref={ref}
+                      id="invite-member-toggle"
+                      variant="primary"
+                      onClick={() => setIsInviteMenuOpen(!isInviteMenuOpen)}
+                      isExpanded={isInviteMenuOpen}
+                    >
+                      {t("inviteMember")}
+                    </MenuToggle>
+                  )}
+                  isOpen={isInviteMenuOpen}
+                >
+                  <DropdownList>
+                    <DropdownItem
+                      key="invite-new-user"
+                      onClick={() => {
+                        setIsInviteMenuOpen(false);
+                        toggleInviteMembers();
+                      }}
+                    >
+                      {t("inviteNewUser")}
+                    </DropdownItem>
+                    <DropdownItem
+                      key="invite-realm-user"
+                      onClick={() => {
+                        setIsInviteMenuOpen(false);
+                        toggleSelectClient();
+                      }}
+                    >
+                      {t("inviteRealmUser")}
+                    </DropdownItem>
+                  </DropdownList>
+                </Dropdown>
+              </ToolbarItem>
+            )}
+            {canManage && (
+              <ToolbarItem>
+                <Button
+                  variant="plain"
+                  isDisabled={selectedInvitations.length === 0}
+                  onClick={toggleDeleteDialog}
+                >
+                  {t("deleteInvitations")}
+                </Button>
+              </ToolbarItem>
+            )}
             <ToolbarItem>
               <CheckboxFilterComponent
                 filterPlaceholderText={t("filterByStatus")}
@@ -368,6 +372,9 @@ export const Invitations = () => {
           </>
         }
         actionResolver={(rowData) => {
+          if (!canManage) {
+            return [];
+          }
           const invitation: OrganizationInvitationRepresentation = rowData.data;
           const actions = [
             {
@@ -426,16 +433,20 @@ export const Invitations = () => {
           <ListEmptyState
             message={t("emptyInvitations")}
             instructions={t("emptyInvitationsInstructions")}
-            secondaryActions={[
-              {
-                text: t("inviteNewUser"),
-                onClick: toggleInviteMembers,
-              },
-              {
-                text: t("inviteRealmUser"),
-                onClick: toggleSelectClient,
-              },
-            ]}
+            secondaryActions={
+              canManage
+                ? [
+                    {
+                      text: t("inviteNewUser"),
+                      onClick: toggleInviteMembers,
+                    },
+                    {
+                      text: t("inviteRealmUser"),
+                      onClick: toggleSelectClient,
+                    },
+                  ]
+                : undefined
+            }
           />
         }
         isSearching={

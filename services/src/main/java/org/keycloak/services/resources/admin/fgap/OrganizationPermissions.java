@@ -16,6 +16,9 @@
  */
 package org.keycloak.services.resources.admin.fgap;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.ws.rs.ForbiddenException;
 
 import org.keycloak.authorization.AuthorizationProvider;
@@ -113,5 +116,13 @@ class OrganizationPermissions implements OrganizationPermissionEvaluator {
         if (!canQuery()) {
             throw new ForbiddenException();
         }
+    }
+
+    @Override
+    public Map<String, Boolean> getAccess(OrganizationModel organization) {
+        Map<String, Boolean> access = new HashMap<>();
+        access.put("view", canView(organization));
+        access.put("manage", canManage(organization));
+        return access;
     }
 }

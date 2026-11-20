@@ -85,7 +85,9 @@ public class OrganizationResource {
         @APIResponse(responseCode = "403", description = "Forbidden")
     })
     public OrganizationRepresentation get() {
-        return ModelToRepresentation.toRepresentation(organization, false);
+        OrganizationRepresentation rep = ModelToRepresentation.toRepresentation(organization, false);
+        rep.setAccess(auth.orgs().getAccess(organization));
+        return rep;
     }
 
     @DELETE

@@ -72,6 +72,7 @@ export type OrganizationTableProps = PropsWithChildren & {
   searchPlaceholderKey?: string;
   onSelect?: (orgs: OrganizationRepresentation[]) => void;
   onDelete?: (org: OrganizationRepresentation) => void;
+  canDelete?: (org: OrganizationRepresentation) => boolean;
   deleteLabel?: string;
   actions?: Action<OrganizationRepresentation>[];
   /** Renders the membership type cell, plain text when not given. */
@@ -88,6 +89,7 @@ export const OrganizationTable = ({
   searchPlaceholderKey,
   onSelect,
   onDelete,
+  canDelete,
   deleteLabel = "delete",
   link,
   children,
@@ -106,10 +108,29 @@ export const OrganizationTable = ({
       toolbarItem={toolbarItem}
       onSelect={onSelect}
       canSelectAll={onSelect !== undefined}
-      actions={[
-        ...(onDelete ? [{ title: t(deleteLabel), onRowClick: onDelete }] : []),
-        ...(actions ?? []),
-      ]}
+      actions={
+        onDelete && !canDelete
+          ? [
+              { title: t(deleteLabel), onRowClick: onDelete },
+              ...(actions ?? []),
+            ]
+          : actions
+      }
+      actionResolver={
+        onDelete && canDelete
+          ? (row) => {
+              const org = row.data as OrganizationRepresentation;
+              const rowActions = [...(actions ?? [])];
+              if (canDelete(org)) {
+                rowActions.unshift({
+                  title: t(deleteLabel),
+                  onClick: () => onDelete(org),
+                });
+              }
+              return rowActions;
+            }
+          : undefined
+      }
       columns={[
         {
           name: "name",
